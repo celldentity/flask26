@@ -5,74 +5,249 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>종합 관리 시스템</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
     <style>
-        body { padding-top: 70px; } /* 네비바에 가려지지 않게 설정 */
+        :root {
+            --base: #F5F5F5;
+            --sub1: #F2E2C4;
+            --deep: #4B4B4B;
+            --accent: #FFBF00;
+            --white-half: rgba(255, 255, 255, 0.82);
+        }
+
+        body {
+            background-color: var(--base);
+            color: var(--deep);
+            font-family: 'Pretendard', sans-serif;
+            padding-top: 110px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* --- 고도화된 동적 배경 레이어 --- */
+        .dynamic-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            background: linear-gradient(180deg, #87CEEB 0%, #E0F2F1 50%, #F2E2C4 100%);
+        }
+
+        /* 태양 */
+        .sun-group {
+            position: absolute;
+            top: 15%; right: 7%;
+            filter: drop-shadow(0 0 60px rgba(255, 191, 0, 0.5));
+        }
+        .sun {
+            width: 100px; height: 100px;
+            background: radial-gradient(circle, #FFF59D 0%, #FFBF00 100%);
+            border-radius: 50%;
+            animation: sunPulse 6s infinite alternate ease-in-out;
+        }
+
+        /* 구름 (더 많아진 개수) */
+        .cloud {
+            position: absolute;
+            background: white;
+            border-radius: 100px;
+            filter: blur(12px);
+            opacity: 0.6;
+            animation: cloudMove linear infinite;
+        }
+        .cloud::before, .cloud::after {
+            content: ''; position: absolute; background: white; border-radius: 50%;
+        }
+        .cloud::before { width: 60%; height: 150%; top: -60%; left: 15%; }
+        .cloud::after { width: 40%; height: 100%; top: -30%; left: 50%; }
+
+        /* 다층 산맥 (3단계 Parallax) */
+        .mountains-wrap { position: absolute; bottom: 0; width: 100%; height: 60%; }
+        .mtn { position: absolute; bottom: 0; width: 150%; left: -25%; }
+
+        .mtn-far {
+            height: 90%; background: #B2DFDB; clip-path: polygon(0 100%, 15% 40%, 35% 70%, 50% 30%, 70% 60%, 85% 20%, 100% 100%);
+            opacity: 0.3; filter: blur(8px); animation: drift 100s infinite linear;
+        }
+        .mtn-back {
+            height: 70%; background: #91be94; clip-path: polygon(0 100%, 25% 35%, 50% 65%, 75% 25%, 100% 100%);
+            opacity: 0.5; filter: blur(4px); animation: drift 70s infinite linear reverse;
+        }
+        .mtn-front {
+            height: 45%; background: #66BB6A; clip-path: polygon(0 100%, 10% 60%, 30% 30%, 50% 70%, 70% 40%, 90% 80%, 100% 100%);
+            opacity: 0.8; filter: blur(1px); animation: drift 45s infinite linear;
+        }
+
+        /* 사과나무 (더 많아진 나무들) */
+        .tree-group { position: absolute; bottom: -20px; width: 100%; height: 350px; pointer-events: none; }
+        .custom-tree {
+            position: absolute; bottom: 40px; transform-origin: bottom center;
+            animation: treeSway 5s infinite alternate ease-in-out;
+        }
+        .leaves {
+            width: 100px; height: 100px; background: #2E7D32; border-radius: 50% 50% 30% 30%;
+            position: relative; box-shadow: inset -8px -8px 0 rgba(0,0,0,0.1);
+        }
+        .leaves::after { content: '🍎'; position: absolute; top: 15px; left: 25px; font-size: 14px; }
+        .trunk { width: 14px; height: 80px; background: #5D4037; margin: -5px auto 0; border-radius: 3px; }
+
+        .pollen {
+            position: absolute; width: 5px; height: 5px; background: white; border-radius: 50%;
+            opacity: 0.3; animation: flyPollen 12s infinite linear;
+        }
+
+        /* 애니메이션 키프레임 */
+        @keyframes sunPulse { from { transform: scale(1); } to { transform: scale(1.1); } }
+        @keyframes cloudMove { from { left: -300px; } to { left: 110%; } }
+        @keyframes drift { from { transform: translateX(-5%); } to { transform: translateX(5%); } }
+        @keyframes treeSway { from { transform: rotate(-3deg); } to { transform: rotate(3deg); } }
+        @keyframes flyPollen {
+            0% { transform: translate(0, 0); opacity: 0; }
+            50% { opacity: 0.4; }
+            100% { transform: translate(150px, -100vh); opacity: 0; }
+        }
+
+        /* 인터페이스 스타일 */
+        .navbar {
+            background-color: rgba(242, 226, 196, 0.88) !important;
+            border-radius: 20px; margin: 15px; padding: 10px 25px;
+            backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.3);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.05);
+        }
+        main.container {
+            background-color: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(8px) saturate(120%);
+            -webkit-backdrop-filter: blur(8px) saturate(120%);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.03);
+            border-radius: 30px;
+            overflow: hidden;
+            padding: 40px;
+            flex: 1;
+        }
+        .footer {
+            margin: 20px 15px; background-color: var(--deep); color: #fff;
+            padding: 25px 0; border-radius: 20px; text-align: center;
+        }
+        main.container {
+        background-color: rgba(255, 255, 255, 0.15);
+        /* ... 기존 속성들 ... */
+        border-radius: 50px 50px 25px 25px;
+        overflow: hidden; /* 이 줄이 있는지 꼭 확인하세요! */
+    }
+        .table {
+            border-collapse: separate;
+            border-spacing: 0;
+            border-radius: 20px;
+            overflow: hidden;
+            background-color: white;
+            border-style: hidden;
+            margin-top: 20px; /* 표 위에 여백을 주면 더 보기 좋습니다 */
+        }
+
+        .table thead tr:first-child th:first-child { border-top-left-radius: 20px; }
+        .table thead tr:first-child th:last-child { border-top-right-radius: 20px; }
+        .table tbody tr:last-child td:first-child { border-bottom-left-radius: 20px; }
+        .table tbody tr:last-child td:last-child { border-bottom-right-radius: 20px; }
+        /* 여기까지 */
     </style>
 </head>
+
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+    <div class="dynamic-bg">
+        <div class="sun-group"><div class="sun"></div></div>
+
+        <div class="cloud" style="top: 5%; width: 180px; height: 50px; animation-duration: 55s; opacity: 0.5;"></div>
+        <div class="cloud" style="top: 15%; width: 220px; height: 65px; animation-duration: 80s; animation-delay: -20s;"></div>
+        <div class="cloud" style="top: 25%; width: 150px; height: 40px; animation-duration: 40s; animation-delay: -5s; opacity: 0.3;"></div>
+        <div class="cloud" style="top: 35%; width: 280px; height: 80px; animation-duration: 100s; animation-delay: -50s; opacity: 0.4;"></div>
+
+        <div class="mountains-wrap">
+            <div class="mtn mtn-far"></div>
+            <div class="mtn mtn-back"></div>
+            <div class="mtn mtn-front"></div>
+        </div>
+
+        <div class="pollen" style="left: 10%; animation-delay: 0s;"></div>
+        <div class="pollen" style="left: 30%; animation-delay: 4s;"></div>
+        <div class="pollen" style="left: 60%; animation-delay: 2s;"></div>
+        <div class="pollen" style="left: 90%; animation-delay: 7s;"></div>
+
+        <div class="tree-group">
+            <div class="custom-tree" style="left: 3%;">
+                <div class="leaves"></div><div class="trunk"></div>
+            </div>
+            <div class="custom-tree" style="left: 12%; transform: scale(0.8); animation-delay: -1s;">
+                <div class="leaves" style="background: #1B5E20;"></div><div class="trunk"></div>
+            </div>
+            <div class="custom-tree" style="right: 5%; transform: scale(1.1); animation-delay: -3s;">
+                <div class="leaves"></div><div class="trunk"></div>
+            </div>
+            <div class="custom-tree" style="right: 18%; transform: scale(0.9); animation-delay: -2s;">
+                <div class="leaves" style="background: #388E3C;"></div><div class="trunk"></div>
+            </div>
+            <div class="custom-tree" style="left: 48%; transform: scale(0.6); bottom: 60px; opacity: 0.6;">
+                <div class="leaves"></div><div class="trunk"></div>
+            </div>
+        </div>
+    </div>
+
+    <nav class="navbar navbar-expand-lg fixed-top">
         <div class="container">
-            <a class="navbar-brand" href="/">MBC 시스템</a>
+            <a class="navbar-brand" href="/">
+                {% if session.get('user_role') in ('admin', 'manager') %}
+                <span style="color: var(--accent);">●</span>
+                {% else %}
+                <span style="color: var(--deep);">●</span>
+                {% endif %}
+                MBC 시스템
+            </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/board">자유게시판</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/filesboard">자료실(파일게시판)</a>
-                    </li>
+                    <li class="nav-item"><a class="nav-link" href="/board">자유게시판</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/filesboard">자료실</a></li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="scoreDropdown" role="button" data-bs-toggle="dropdown">
-                            성적관리
-                        </a>
-                        <ul class="dropdown-menu shadow">
-                            {# 1. 모든 로그인 사용자가 볼 수 있는 메뉴 #}
-                            {% if session.get('user_id') %}
-                                <li><a class="dropdown-item" href="/score/my">내 성적 조회</a></li>
+                        <a class="nav-link dropdown-toggle" href="#" id="scoreDropdown" data-bs-toggle="dropdown">성적관리</a>
+                        <ul class="dropdown-menu shadow border-0" style="border-radius: 12px;">
+                            {% if session.get('user_role') == 'user' %}
+                            <li><a class="dropdown-item" href="/score/my">내 성적 조회</a></li>
                             {% endif %}
-
-                            {# 2. 관리자/매니저만 볼 수 있는 메뉴 #}
                             {% if session.get('user_role') in ('admin', 'manager') %}
-                                <li><hr class="dropdown-divider"></li>
-                                <li><h6 class="dropdown-header">관리자 메뉴</h6></li>
-                                <li><a class="dropdown-item" href="/score/members">학생 성적 입력 (학생선택)</a></li>
-                                <li><a class="dropdown-item" href="/score/list">전체 성적 현황 (JOIN)</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><h6 class="dropdown-header">관리자 메뉴</h6></li>
+                            <li><a class="dropdown-item" href="/score/members">학생 성적 입력</a></li>
+                            <li><a class="dropdown-item" href="/score/list">전체 성적 현황</a></li>
                             {% endif %}
                         </ul>
                     </li>
                 </ul>
                 <ul class="navbar-nav">
                     {% if session.get('user_id') %}
-                        <li class="nav-item">
-                            <span class="nav-link text-white"><b>{{ session['user_name'] }}|{{ session['user_role']}}</b>님</span>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/mypage">마이페이지</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/logout">로그아웃</a>
-                        </li>
+                    <li class="nav-item"><span class="nav-link"><b>{{ session['user_name'] }}</b></span></li>
+                    <li class="nav-item"><a class="nav-link" href="/logout">로그아웃</a></li>
                     {% else %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="/login">로그인</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/join">회원가입</a>
-                        </li>
+                    <li class="nav-item"><a class="nav-link" href="/login">로그인</a></li>
                     {% endif %}
                 </ul>
             </div>
         </div>
     </nav>
 
-    <div class="container">
-        <!--본문 영역으로 다른 파일이 이 레이아웃을 겹쳐 보이게 처리하는 용도-->
-        {% block content %}
-        {% endblock %}
-    </div>
+    <main class="{{ 'container mb-5' if request.path != '/' else '' }}"
+      style="{{ 'max-width: 900px;' if request.path != '/' else '' }} flex: 1; min-height: 60vh;">
+    {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p class="mb-0">© 2026 MBC LMS System. All Rights Reserved.</p>
+        </div>
+    </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
