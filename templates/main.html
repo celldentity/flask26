@@ -1,0 +1,33 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="py-5 text-center">
+    <h1 class="display-5 fw-bold text-body-emphasis">LMS 타자연습 시스템</h1>
+    <p class="lead mb-4">회원관리부터 타자연습까지 한 곳에서 해결하세요.</p>
+</div>
+
+<div class="row g-4 py-5 row-cols-1 row-cols-lg-3 justify-content-center">
+    <div class="col d-flex align-items-start">
+        <div class="card h-100 shadow-sm border-success">
+            <div class="card-body">
+                <h3 class="fs-2 text-success">타자연습</h3>
+                <p>짧은 문장의 한글&영어 타자를 연습해보세요..</p>
+                <a href="/typing" class="btn btn-success">연습하기</a>
+            </div>
+        </div>
+    </div>
+    <div class="col d-flex align-items-start">
+        <div class="card h-100 shadow-sm border-info">
+            <div class="card-body">
+                <h3 class="fs-2 text-info">회원관리</h3>
+                <p>사용자 정보 및 권한을 관리합니다. 현재 등급을 확인해 보세요.</p>
+                {% if session.get('user_id') %}
+                    <a href="/mypage" class="btn btn-info text-white">마이페이지</a>
+                {% else %}
+                    <a href="/login" class="btn btn-info text-white">로그인하기</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

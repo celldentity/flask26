@@ -1,0 +1,262 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<style>
+    /* 폰트 및 기본 배경 */
+    @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@500&display=swap');
+
+    .typing-container {
+        max-width: 900px;
+        margin: 20px auto;
+    }
+
+    /* 타이핑 카드 디자인 */
+    .typing-card {
+        background: #ffffff;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        border: none;
+        overflow: hidden;
+    }
+
+    .typing-header {
+        background: #f8f9fa;
+        padding: 20px 30px;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    /* 스탯 레이아웃 */
+    .stat-box {
+        display: flex;
+        gap: 20px;
+    }
+    .stat-item {
+        text-align: center;
+    }
+    .stat-value {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #198754; /* 부트스트랩 success 컬러 */
+    }
+    .stat-label {
+        font-size: 0.75rem;
+        color: #6c757d;
+        display: block;
+    }
+
+    /* 본문 영역 */
+    .typing-body {
+        padding: 40px;
+        position: relative;
+        min-height: 300px;
+    }
+
+    .quote-info {
+        font-style: italic;
+        color: #6c757d;
+        margin-bottom: 20px;
+        border-left: 4px solid #198754;
+        padding-left: 15px;
+    }
+
+    #target-sentence {
+        font-family: 'Roboto Mono', 'Noto Sans KR', monospace;
+        font-size: 1.5rem;
+        line-height: 2;
+        letter-spacing: 0.05rem;
+        color: #adb5bd; /* 아직 안 친 글자 색 */
+        white-space: pre-wrap;
+        word-break: break-all;
+    }
+
+    /* 글자 상태별 색상 */
+    .char-correct {
+        color: #212529 !important; /* 친 글자는 진하게 */
+    }
+    .char-incorrect {
+        color: #dc3545 !important; /* 틀린 글자는 빨간색 */
+        background-color: rgba(220, 53, 69, 0.1);
+        text-decoration: underline;
+    }
+    .active-char {
+        background-color: #e8f5e9;
+        border-bottom: 3px solid #198754;
+        color: #198754;
+    }
+
+    /* 입력창 (숨김 처리) */
+    #typing-input {
+        position: absolute;
+        opacity: 0;
+        z-index: -1;
+    }
+
+    /* 진행바 */
+    .progress {
+        height: 5px;
+        border-radius: 0;
+        background-color: #e9ecef;
+    }
+    .progress-bar {
+        background-color: #198754;
+        transition: width 0.2s;
+    }
+</style>
+
+<div class="typing-container">
+    <div class="mb-3 d-flex justify-content-between align-items-center">
+        <div class="btn-group">
+            <a href="/typing?lang=ko" class="btn btn-sm {{ 'btn-success' if typing.lang == 'ko' else 'btn-outline-success' }}">한글 연습</a>
+            <a href="/typing?lang=en" class="btn btn-sm {{ 'btn-success' if typing.lang == 'en' else 'btn-outline-success' }}">English</a>
+        </div>
+        <span class="text-muted small"><i class="bi bi-keyboard"></i> 화면 아무곳이나 클릭 후 타이핑하세요</span>
+    </div>
+
+    <div class="card typing-card">
+        <div class="progress">
+            <div id="progress-bar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+        </div>
+
+        <div class="typing-header">
+            <div class="stat-box">
+                <div class="stat-item">
+                    <span class="stat-label">현재 타수</span>
+                    <span id="live-cpm" class="stat-value">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">정확도</span>
+                    <span class="stat-value"><span id="live-accuracy">100</span>%</span>
+                </div>
+            </div>
+            <div class="stat-item text-end">
+                <span class="stat-label">작가</span>
+                <span class="fw-bold">{{ typing.title }}</span>
+            </div>
+        </div>
+
+        <div class="typing-body" onclick="document.getElementById('typing-input').focus()">
+            <div class="quote-info">
+                "코딩 명언 타자연습 - 문장을 끝까지 입력하세요."
+            </div>
+
+            <div id="target-sentence">
+                {% if typing %}
+                    {%- for char in typing.content -%}
+                        <span data-orig="{{ char }}">{{ char }}</span>
+                    {%- endfor -%}
+                {% else %}
+                    데이터가 없습니다.
+                {% endif %}
+            </div>
+
+            <input type="text" id="typing-input" autofocus autocomplete="off">
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="resultModal" data-bs-backdrop="static" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">🎉 연습 완료!</h5>
+            </div>
+            <div class="modal-body p-4 text-center">
+                <div class="row g-3">
+                    <div class="col-6">
+                        <div class="p-3 border rounded bg-light">
+                            <small class="text-muted d-block">정확도</small>
+                            <span id="accuracy" class="h4 fw-bold text-success">0</span>%
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-3 border rounded bg-light">
+                            <small class="text-muted d-block">평균 타수</small>
+                            <span id="speed" class="h4 fw-bold text-success">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a href="/" class="btn btn-light">그만하기</a>
+                <button onclick="location.reload()" class="btn btn-success">한 번 더!</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const inputField = document.getElementById('typing-input');
+    const targetSentence = document.getElementById('target-sentence');
+    const spans = document.querySelectorAll('#target-sentence span');
+    const targetText = "{{ typing.content|safe if typing else '' }}";
+    const targetLength = targetText.length;
+
+    let startTime = null;
+    let isFinished = false;
+    let isComposing = false;
+
+    // 초기 포커스
+    window.addEventListener('load', () => {
+        if (spans.length > 0) spans[0].classList.add('active-char');
+        inputField.focus();
+    });
+
+    inputField.addEventListener('compositionstart', () => { isComposing = true; });
+    inputField.addEventListener('compositionend', () => { isComposing = false; updateUI(); });
+    inputField.addEventListener('input', () => {
+        if (!startTime) startTime = new Date();
+        updateUI();
+    });
+
+    function updateUI() {
+        if (isFinished) return;
+        const userValue = inputField.value;
+        const userLength = userValue.length;
+
+        // 진행바 업데이트
+        document.getElementById('progress-bar').style.width = (userLength / targetLength * 100) + '%';
+
+        spans.forEach((span, i) => {
+            const orig = span.getAttribute('data-orig');
+            span.className = ''; // 클래스 초기화
+
+            if (i < userLength) {
+                if (userValue[i] === orig) {
+                    span.classList.add('char-correct');
+                } else {
+                    span.classList.add('char-incorrect');
+                }
+            } else if (i === userLength) {
+                span.classList.add('active-char');
+            }
+        });
+
+        // 실시간 타수 계산
+        if (userLength > 0) {
+            const elapsed = (new Date() - startTime) / 60000;
+            document.getElementById('live-cpm').innerText = Math.round(userLength / elapsed);
+        }
+
+        if (!isComposing && userLength >= targetLength) {
+            finish();
+        }
+    }
+
+    function finish() {
+        isFinished = true;
+        const totalTime = (new Date() - startTime) / 1000;
+        const cpm = Math.round(targetLength / (totalTime / 60));
+        const correct = document.querySelectorAll('.char-correct').length;
+        const accuracy = Math.round((correct / targetLength) * 100);
+
+        document.getElementById('accuracy').innerText = accuracy;
+        document.getElementById('speed').innerText = cpm;
+
+        // 부트스트랩 모달 띄우기
+        new bootstrap.Modal(document.getElementById('resultModal')).show();
+    }
+</script>
+{% endblock %}
